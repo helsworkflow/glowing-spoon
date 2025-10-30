@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "workspaces": ["client", "server", "worker"],
+  "scripts": {
+    "bootstrap": "npm install",
+    "start:all": "npm -w client start & npm -w server start & npm -w worker start"
+  }
+}
