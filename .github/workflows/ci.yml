@@ -50,3 +50,63 @@ jobs:
           docker push ${DOCKER_ORG}/multi-nginx
           docker push ${DOCKER_ORG}/multi-server
           docker push ${DOCKER_ORG}/multi-worker
+
+  deploy-eb:
+    needs: build-and-push
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      EB_APPLICATION: ${{ secrets.EB_APPLICATION }}
+      EB_ENVIRONMENT: ${{ secrets.EB_ENVIRONMENT }}
+      EB_S3_BUCKET: ${{ secrets.EB_S3_BUCKET }}
+      BUNDLE_KEY: docker-multi/${{ github.sha }}.zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create deployment bundle
+        run: |
+          BUNDLE_DIR=deploy
+          mkdir -p "$BUNDLE_DIR"
+          cp docker-compose.yml "$BUNDLE_DIR"/
+          if [ -d ".ebextensions" ]; then
+            cp -R .ebextensions "$BUNDLE_DIR"/
+          fi
+          cd "$BUNDLE_DIR"
+          zip -r ../bundle.zip .
+
+      - name: Upload bundle to S3
+        run: aws s3 cp bundle.zip "s3://${EB_S3_BUCKET}/${BUNDLE_KEY}"
+
+      - name: Create or reuse application version
+        run: |
+          set -e
+          CREATE_OUTPUT=$(aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION" \
+            --version-label "${GITHUB_SHA}" \
+            --source-bundle S3Bucket="${EB_S3_BUCKET}",S3Key="${BUNDLE_KEY}" \
+            --auto-create-application 2>&1) || CREATE_EXIT=$?
+
+          if [ "${CREATE_EXIT:-0}" -ne 0 ]; then
+            if echo "$CREATE_OUTPUT" | grep -qi "AlreadyExists"; then
+              echo "Application version ${GITHUB_SHA} already exists, reusing."
+            else
+              echo "$CREATE_OUTPUT" >&2
+              exit "${CREATE_EXIT}"
+            fi
+          else
+            echo "$CREATE_OUTPUT"
+          fi
+
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENVIRONMENT" \
+            --version-label "${GITHUB_SHA}"
