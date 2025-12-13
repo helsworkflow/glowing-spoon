@@ -1,3 +1,5 @@
+#
+# Local development Docker Compose. Production config lives in docker-compose.prod.yml.
 services:
   postgres:
     image: postgres:16-alpine
