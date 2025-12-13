@@ -27,24 +27,17 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME || secrets.DOCKER_ID }}
-      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD || secrets.DOCKER_PASSWORD }}
+      DOCKER_ORG: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build images
-        env:
-          DOCKER_ORG: ${{ env.DOCKERHUB_USERNAME }}
         run: |
           docker build -t ${DOCKER_ORG}/multi-react ./client
           docker build -t ${DOCKER_ORG}/multi-nginx ./nginx
@@ -52,8 +45,6 @@ jobs:
           docker build -t ${DOCKER_ORG}/multi-worker ./worker
 
       - name: Push images
-        env:
-          DOCKER_ORG: ${{ secrets.DOCKER_ID }}
         run: |
           docker push ${DOCKER_ORG}/multi-react
           docker push ${DOCKER_ORG}/multi-nginx
