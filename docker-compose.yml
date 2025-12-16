@@ -15,7 +15,6 @@ services:
         awslogs-stream: nginx
         awslogs-create-group: "true"
         awslogs-datetime-format: "%Y-%m-%d %H:%M:%S"
-        awslogs-multiline-pattern: "^(\\d{4}-\\d{2}-\\d{2}|\\[|\\{|\\(|Error|INFO|WARN|DEBUG)"
 
   client:
     image: ${DOCKER_ORG:-likpiits}/multi-react
@@ -30,7 +29,6 @@ services:
         awslogs-stream: client
         awslogs-create-group: "true"
         awslogs-datetime-format: "%Y-%m-%d %H:%M:%S"
-        awslogs-multiline-pattern: "^(\\d{4}-\\d{2}-\\d{2}|\\[|\\{|\\(|Error|INFO|WARN|DEBUG)"
 
   api:
     image: ${DOCKER_ORG:-likpiits}/multi-server
@@ -53,7 +51,6 @@ services:
         awslogs-stream: api
         awslogs-create-group: "true"
         awslogs-datetime-format: "%Y-%m-%d %H:%M:%S"
-        awslogs-multiline-pattern: "^(\\d{4}-\\d{2}-\\d{2}|\\[|\\{|\\(|Error|INFO|WARN|DEBUG)"
 
   worker:
     image: ${DOCKER_ORG:-likpiits}/multi-worker
@@ -69,4 +66,3 @@ services:
         awslogs-stream: worker
         awslogs-create-group: "true"
         awslogs-datetime-format: "%Y-%m-%d %H:%M:%S"
-        awslogs-multiline-pattern: "^(\\d{4}-\\d{2}-\\d{2}|\\[|\\{|\\(|Error|INFO|WARN|DEBUG)"
