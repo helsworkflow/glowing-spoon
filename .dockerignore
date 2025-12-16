@@ -1,4 +1,10 @@
+.git
+.gitignore
+**/.git
+node_modules
 **/node_modules/
 **/dist/
 **/build/
-.git
+npm-debug.log
+.DS_Store
+.env
