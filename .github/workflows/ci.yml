@@ -95,7 +95,7 @@ jobs:
             --auto-create-application 2>&1) || CREATE_EXIT=$?
 
           if [ "${CREATE_EXIT:-0}" -ne 0 ]; then
-            if echo "$CREATE_OUTPUT" | grep -qi "AlreadyExists"; then
+            if echo "$CREATE_OUTPUT" | grep -Eqi "AlreadyExists|already exists"; then
               echo "Application version ${GITHUB_SHA} already exists, reusing."
             else
               echo "$CREATE_OUTPUT" >&2
